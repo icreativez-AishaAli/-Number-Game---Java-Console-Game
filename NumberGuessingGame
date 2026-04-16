@@ -102,6 +102,6 @@ public class NumberGame {
             System.out.println(" Nice try! Play again to improve your score!");
         }
         
-        scanner.close();
+       
     }
 }
