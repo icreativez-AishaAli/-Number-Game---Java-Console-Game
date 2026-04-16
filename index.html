@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Number Guessing Game — Java Console Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #6ee7b7;
+    --accent2: #818cf8;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow {
+    position: fixed;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(110,231,183,0.08) 0%, transparent 70%);
+    top: -200px; left: -200px;
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 10s ease-in-out infinite alternate;
+  }
+  .glow2 {
+    position: fixed;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(129,140,248,0.07) 0%, transparent 70%);
+    bottom: -150px; right: -150px;
+    pointer-events: none;
+    z-index: 0;
+    animation: drift2 12s ease-in-out infinite alternate;
+  }
+
+  @keyframes drift { from { transform: translate(0,0); } to { transform: translate(80px, 60px); } }
+  @keyframes drift2 { from { transform: translate(0,0); } to { transform: translate(-60px, -40px); } }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative; z-index: 1;
+  }
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+  .nav-link {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .nav-link:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* HERO */
+  .hero {
+    padding: 80px 0 64px;
+    position: relative;
+  }
+  .hero-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(110,231,183,0.08);
+    border: 1px solid rgba(110,231,183,0.2);
+    padding: 4px 12px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-title {
+    font-size: clamp(42px, 8vw, 80px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero-title span { color: var(--accent); }
+  .hero-title .line2 { color: var(--accent2); }
+
+  .hero-desc {
+    font-size: 17px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 560px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-btns {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent);
+    color: #0a0a0f;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { background: #a7f3d0; transform: translateY(-1px); }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 12px 24px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); transform: translateY(-1px); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* DEMO TERMINAL */
+  .terminal-wrap {
+    margin: 64px 0;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .terminal {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .terminal-bar {
+    background: #161622;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+  .term-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: 8px;
+  }
+  .terminal-body {
+    padding: 24px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 2;
+  }
+  .t-system { color: var(--accent); }
+  .t-prompt { color: var(--accent2); }
+  .t-input  { color: #fbbf24; }
+  .t-error  { color: #f87171; }
+  .t-success{ color: var(--accent); }
+  .t-muted  { color: var(--muted); }
+  .cursor {
+    display: inline-block;
+    width: 8px; height: 14px;
+    background: var(--accent);
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* STATS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 48px 0;
+    animation: fadeUp 0.6s 0.5s ease both;
+  }
+  .stat {
+    background: var(--surface);
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    letter-spacing: -0.02em;
+    font-family: var(--mono);
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+  }
+
+  /* FEATURES */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 64px;
+    animation: fadeUp 0.6s 0.5s ease both;
+  }
+  .feature {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .feature:hover { border-color: var(--accent); }
+  .feature-icon {
+    font-size: 24px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .feature-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .feature-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* HOW TO RUN */
+  .how-to {
+    margin-bottom: 64px;
+    animation: fadeUp 0.6s 0.6s ease both;
+  }
+  .step {
+    display: flex;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(110,231,183,0.08);
+    border: 1px solid rgba(110,231,183,0.2);
+    width: 32px; height: 32px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-content { flex: 1; }
+  .step-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  code {
+    font-family: var(--mono);
+    background: rgba(110,231,183,0.08);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative; z-index: 1;
+  }
+  .footer-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .footer-text span { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .features { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr; }
+    .hero-btns { flex-direction: column; }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow"></div>
+<div class="glow2"></div>
+
+<div class="container">
+  <nav>
+    <span class="nav-logo">~/number-game</span>
+    <a class="nav-link" href="https://github.com/icreativez-AishaAli/-Number-Game---Java-Console-Game" target="_blank">↗ View on GitHub</a>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-tag">JAVA · CONSOLE GAME · DECODELABS 2026</div>
+    <h1 class="hero-title">
+      Guess the<br>
+      <span>Number.</span><br>
+      <span class="line2">Beat the Game.</span>
+    </h1>
+    <p class="hero-desc">
+      A fun, interactive number guessing game built in Java. The computer picks a secret number — your job is to find it using hints. Built as part of the DecodeLabs Industrial Training Kit (Batch 2026).
+    </p>
+    <div class="hero-btns">
+      <a class="btn-primary" href="https://github.com/icreativez-AishaAli/-Number-Game---Java-Console-Game" target="_blank">⬇ Download Source</a>
+      <a class="btn-secondary" href="#how-to-run">How to Run →</a>
+    </div>
+  </section>
+
+  <!-- TERMINAL DEMO -->
+  <div class="terminal-wrap">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <span class="term-title">NumberGame.java — console output</span>
+      </div>
+      <div class="terminal-body">
+        <div class="t-system">╔══════════════════════════════╗</div>
+        <div class="t-system">║   Number Guessing Game 🎮    ║</div>
+        <div class="t-system">╚══════════════════════════════╝</div>
+        <br>
+        <div class="t-muted">I've picked a number between 1 and 100.</div>
+        <div class="t-muted">Can you guess it?</div>
+        <br>
+        <div><span class="t-prompt">Enter your guess: </span><span class="t-input">50</span></div>
+        <div class="t-error">↓ Too low! Try higher.</div>
+        <div><span class="t-prompt">Enter your guess: </span><span class="t-input">75</span></div>
+        <div class="t-error">↓ Too high! Try lower.</div>
+        <div><span class="t-prompt">Enter your guess: </span><span class="t-input">63</span></div>
+        <div class="t-success">🎉 Correct! You got it in 3 attempts!</div>
+        <br>
+        <div><span class="t-prompt">Play again? (y/n): </span><span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num">100</span>
+      <div class="stat-label">Number Range</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">∞</span>
+      <div class="stat-label">Replayable</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">Java</span>
+      <div class="stat-label">Language</div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="section-label">// Features</div>
+  <div class="features">
+    <div class="feature">
+      <span class="feature-icon">🎯</span>
+      <div class="feature-title">Smart hints</div>
+      <div class="feature-desc">After each guess, the game tells you whether to go higher or lower — guiding you to the answer.</div>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🔁</span>
+      <div class="feature-title">Replay anytime</div>
+      <div class="feature-desc">Once you win, you can instantly start a new round with a freshly randomized number.</div>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">📊</span>
+      <div class="feature-title">Attempt tracking</div>
+      <div class="feature-desc">The game tracks how many guesses it took you — challenge yourself to beat your best score!</div>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">☕</span>
+      <div class="feature-title">Pure Java</div>
+      <div class="feature-desc">No frameworks, no dependencies. Just clean Java using Scanner and basic OOP — great for learning.</div>
+    </div>
+  </div>
+
+  <!-- HOW TO RUN -->
+  <div id="how-to-run" class="how-to">
+    <div class="section-label">// How to run</div>
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <div class="step-title">Clone the repository</div>
+        <div class="step-desc">Run <code>git clone https://github.com/icreativez-AishaAli/-Number-Game---Java-Console-Game.git</code> in your terminal.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <div class="step-title">Open in your IDE</div>
+        <div class="step-desc">Open the project folder in VS Code, IntelliJ IDEA, or Eclipse. Make sure you have Java JDK 8+ installed.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <div class="step-title">Compile the code</div>
+        <div class="step-desc">In your terminal, run <code>javac NumberGame.java</code> to compile the source file.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-content">
+        <div class="step-title">Play the game!</div>
+        <div class="step-desc">Run <code>java NumberGame</code> and start guessing. Good luck! 🎉</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-text">Built by <span>icreativez-AishaAli</span> · DecodeLabs Batch 2026</div>
+    <div class="footer-text">Made with <span>☕ Java</span></div>
+  </footer>
+</div>
+
+</body>
+</html>
